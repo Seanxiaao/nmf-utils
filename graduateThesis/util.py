@@ -60,10 +60,30 @@ def sparscity(X):
     n = X.shape[0] * X.shape[1]
     return (n - (np.linalg.norm(X, ord = 1)/np.linalg.norm(X, ord = 2)) ** 2)/(n - 1)
 
-def kernel_M(X, initialization):
-    if initialization == 'rbf':
-        kX =
-        return np.dot()
+def kernel_M(X, initialization, parameter):
+    shape, Xt = X.shape[1], X.T
+    result = np.zeros([shape, shape])
+    for i in range(shape):
+        for j in range(shape):
+            if initialization == 'rbf':
+                result[i, j] = rbf_kernel(Xt[i], Xt[j], parameter)
+            elif initialization == 'poly':
+                result[i, j] = pol_kernel(Xt[i], Xt[j], parameter)
+            elif initialization == 'sigmoid':
+                result[i, j] = sig_kernel(x, y, parameter)
+    return result
+
+#kernels we needed
+def rbf_kernel(x, y, sigma): #x and y are vectors
+    return pow(2.718, - sigma * np.linalg.norm(x - y) ** 2)
+
+def pol_kernel(x, y, dimension):
+    return (1 + np.dot(x.T, y)) ** dimension
+
+def sig_kernel(x, y, alpha):
+    return np.tanh(alpha * np.dot(x.T, y))
+
+
 #---- algorithm ----
 #we can check it's sensitiveness to initials and try transfer learning
 # {X - FG.T}
@@ -252,12 +272,26 @@ def convex_non_negative_factorization(X, F=None, G=None, n_components = None,
     return W, G, result
 
 def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
-                                    tol=1e-4,max_iter=200, initialization = "random", kernel = 'rbf'):
+                                    tol=1e-4,max_iter=200, kernel = 'rbf', parameter = 0.5):
 
+    n_samples, n_features = X.shape
+    if n_components is None:
+        n_components = n_features
+
+    #check initialized position
+    if not isinstance(n_components, INTEGER_TYPES) or n_components <= 0:
+        raise ValueError("Number of components must be a positive integer;"
+                         " got (n_components=%r)" % n_components)
+    if not isinstance(max_iter, INTEGER_TYPES) or max_iter < 0:
+        raise ValueError("Maximum number of iterations must be a positive "
+                         "integer; got (max_iter=%r)" % max_iter)
+    if not isinstance(tol, numbers.Number) or tol < 0:
+        raise ValueError("Tolerance for stopping criteria must be "
+                         "positive; got (tol=%r)" % tol)
+
+    K = kernel_M(X, kernel, parameter)
     G = np.random.rand(n_features, n_components)
     F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
-
-
 
 #(BaseEstimator, TransformerMixin)
 class semi_NMF:

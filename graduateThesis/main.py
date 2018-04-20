@@ -1,3 +1,4 @@
+#utf
 import data, util
 import argparse
 import numpy as np
@@ -17,7 +18,7 @@ def main(arg):
     X = source_data.get_matrix().T[:sample_size, :feature_size]
     #X = np.array([[1.0,2.0,3.0],[-3.0,4.0,5.0],[1.0, -2.0, 3.0]])
     print("the frobenis norm of X is {}!".format(np.linalg.norm(X)))
-    #    分组
+    #clustering
     group = 16
     F, G, result1 = util.semi_non_negative_factorization(X, n_components = group,max_iter = 100)
     print("\n")
@@ -140,6 +141,16 @@ def test_kmeans_label():
     factual = estimator.labels_
     print("label expected \n {}\n and got \n {}".format(expected, factual.T))
 
+def test_kernel():
+
+    X = np.array([[1.3, 1.8, 4.8, 7.1, 5.0, 5.2, 8.0],
+                  [1.5, 6.9, 3.9, -5.5, -8.5, -3.9, -5.5],
+                  [6.5, 1.6, 8.2, -7.2, -8.7, -7.9, -5.2],
+                  [3.8, 8.3, 4.7, 6.4, 7.5, 3.2, 7.4],
+                  [-7.3, -1.8, -2.1, 2.7, 6.8, 4.8, 6.2]
+                  ])
+    estimated = util.kernel_M(X, 'poly', 1)
+    print("kernel result is {}".format(estimated))
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
@@ -157,6 +168,9 @@ if __name__ == '__main__':
         test_kmeans_result()
     elif args["test"] == "draw":
         test_draw()
+    elif args["test"] == "kernel":
+        test_kernel()
+
     """
     nmf_model = util.NMF(n_components = 4)
     item_dis = nmf_model.fit(values)
