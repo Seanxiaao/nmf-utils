@@ -72,7 +72,56 @@ def _update_snmf_fast(np.ndarray[np.double_t, ndim=2] X,
 
     return G
 
+def _update_snmf_fast_constraint(np.ndarray[np.double_t, ndim=2] X,
+                          np.ndarray[np.double_t, ndim=2] F,
+                          np.ndarray[np.double_t, ndim=2] G,
+                          double resizor,
+                          double beta):
 
+    cdef Py_ssize_t n_components = F.shape[1]
+    cdef Py_ssize_t n_features = G.shape[0]
+    cdef double p
+    cdef np.ndarray[np.double_t, ndim=2] Ir
+    cdef np.ndarray[np.double_t, ndim=2] XtF
+    cdef np.ndarray[np.double_t, ndim=2] XtF_p
+    cdef np.ndarray[np.double_t, ndim=2] XtF_n
+    cdef np.ndarray[np.double_t, ndim=2] FtF
+    cdef np.ndarray[np.double_t, ndim=2] FtF_p
+    cdef np.ndarray[np.double_t, ndim=2] FtF_n
+    cdef np.ndarray[np.double_t, ndim=2] numerator
+    cdef np.ndarray[np.double_t, ndim=2] denominator
+
+    Ir = np.identity(n_components)
+
+    #with nogil: calculate G
+    XtF, FtF = np.dot(X.T, F) + beta * G, np.dot(F.T, F) + beta * Ir
+    XtF_p,  FtF_p = M_pos(XtF), M_pos(FtF)
+    XtF_n,  FtF_n = XtF_p - XtF, FtF_p - FtF
+    numerator, denominator = XtF_p + np.dot(G, FtF_n), XtF_n + np.dot(G, FtF_p)
+    for label in range(n_components):
+        for i in range(n_features):
+            q, p = numerator[i,label], denominator[i, label]
+            if p == 0:
+               pass
+            #if p == 0 and q == 0:
+            #   G[i][label] = 0   this block can always make the algorithm converge fast
+            #elif q != 0:         which may means the result is not good
+            #   G[i][label] = sqrt(numerator[i, label]/ resizor)
+            else:
+               G[i][label] = sqrt(numerator[i, label] /
+                                p)
+
+    """
+    XtF , GFtF = np.dot(X.T, F), np.dot(G,np.dot(F.T,F))
+    for label in range(n_components):
+        for i in range(n_features):
+           G[i][label] = sqrt((max(0, XtF[i,label]) + max(0,GFtF[i, label])) /
+                                (max(0,XtF[i,label]) + max(0, GFtF[i, label])) )
+    """
+    #Calculate F
+    #F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
+
+    return G
 
 def _update_cvxnmf_fast(np.ndarray[np.double_t, ndim=2] X,
                            np.ndarray[np.double_t, ndim=2] W,
