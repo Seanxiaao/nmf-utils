@@ -87,8 +87,8 @@ def test_result():
     Gcvx_expected = np.array([[0.31, 0.31, 0.29, 0.02, 0, 0,  0.02],
                               [0, 0.06, 0, 0.31, 0.27, 0.30, 0.36]])
 
-    F, G = util.semi_non_negative_factorization(X, n_components = 2)
-    F1, G1 = util.convex_non_negative_factorization(X, n_components = 2)
+    F, G , losses= util.semi_non_negative_factorization(X, n_components = 2)
+    F1, G1, losses= util.convex_non_negative_factorization(X, n_components = 2)
     Gt = G.T
     Gt1 = G1.T
     #rescale the result
@@ -149,8 +149,11 @@ def test_kernel():
                   [3.8, 8.3, 4.7, 6.4, 7.5, 3.2, 7.4],
                   [-7.3, -1.8, -2.1, 2.7, 6.8, 4.8, 6.2]
                   ])
-    estimated = util.kernel_M(X, 'poly', 1)
-    print("kernel result is {}".format(estimated))
+    #X = np.array([[1.0 ,0.0], [0.0, 1.0]])
+    #estimated = util.semi_non_negative_factorization(X)
+    estimated = util.semi_non_negative_factorization_with_straint(X, max_iter = 10, alpha = 0.5, beta = 0.5)
+    #estimated2 = util.kernel_non_negative_factorization(X, kernel= 'poly', parameter = 0.5)[1]
+    print("kernel result is {}".format(estimated[1]))
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
