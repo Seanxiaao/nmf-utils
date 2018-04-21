@@ -142,8 +142,8 @@ def semi_non_negative_factorization(X, F=None, G=None, n_components = None,
         F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
         #print("F:{} \n G:{}".format(preprocessing.normalize(F,norm='l2'),preprocessing.normalize(G,norm='l2')))
         if (n_iter % 5) == 0:
-            losses = losses(X, F, G)
-            print("It is {} times iteration for semi_NMF with losses :{} ".format(n_iter, losses))
+            los = losses(X, F, G)
+            print("It is {} times iteration for semi_NMF with losses :{} ".format(n_iter, los))
             result.append([n_iter,losses])
     return F, G, result
     ## write some simple test now to check the mathods value
@@ -191,20 +191,12 @@ def semi_non_negative_factorization_with_straint(X, F=None, G=None, n_components
     #update, can use cython to boost(max_iter + 1, n_components, n_features
     result , Ir = [], np.identity(n_components)
     for n_iter in range(max_iter):
-    #  alternative method
+        G = up._update_snmf_fast_constraint(X, F, G, 0.000001, beta)
         F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G) + alpha * Ir)))
-        XtF, FtF = np.dot(X.T, F) + beta * G, np.dot(F.T, F) + beta * Ir
-        XtF_p,  FtF_p = M_pos(XtF), M_pos(FtF)
-        XtF_n,  FtF_n = XtF_p - XtF, FtF_p - FtF
-        numerator, denominator = XtF_p + np.dot(G, FtF_n), XtF_n + np.dot(G, FtF_p)
-        G *= np.sqrt(numerator / denominator)
-
-    #    G = up._update_snmf_fast(X, F, G, 0.000001)
-    #    F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
         #print("F:{} \n G:{}".format(preprocessing.normalize(F,norm='l2'),preprocessing.normalize(G,norm='l2')))
-        if (n_iter % 5) == 0:
-            losses = losses(X, F, G)
-            print("It is {} times iteration for semi_NMF with losses :{} ".format(n_iter, losses))
+        if (n_iter % 1) == 0:
+            los = losses(X, F, G)
+            print("It is {} times iteration for semi_NMF with losses :{} ".format(n_iter, los))
             result.append([n_iter,losses])
     return F, G, result
     ## write some simple test now to check the mathods value
@@ -266,8 +258,8 @@ def convex_non_negative_factorization(X, F=None, G=None, n_components = None,
     #            W[i][label] = math.sqrt(numerator_W[i, label]/ denominator_W[i, label])
 
         if (n_iter % 5) == 0:
-            losses = losses(X,np.dot(X,W),G)
-            print("It is {} times iteration for convex-NMF with losses {} and sparseness:".format(n_iter, losses, sparseness))
+            los = losses(X,np.dot(X,W),G)
+            print("It is {} times iteration for convex-NMF with losses {} and sparseness:".format(n_iter, los))
             result.append([n_iter,losses])
     return W, G, result
 
@@ -289,9 +281,25 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
         raise ValueError("Tolerance for stopping criteria must be "
                          "positive; got (tol=%r)" % tol)
 
-    K = kernel_M(X, kernel, parameter)
-    G = np.random.rand(n_features, n_components)
-    F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
+    K, Ir = kernel_M(X, kernel, parameter), np.eye(n_features)
+    F, G = np.random.rand(n_features, n_components), np.random.rand(n_components, n_features)
+    result = []
+    for n_iter in range(max_iter):
+        W = Ir - F * G
+        D = np.dot(W.T, np.dot(K, W)) ** (-1/2)
+        temp_lst = []
+        for i in range(len(D)):
+            temp_lst.append(D[i, i])
+        D = np.diag([x for x in temp_lst])
+        F *= K * D * G.T * np.linalg.inv(K*F*G*D*G.T)
+        G *= D * K * F * np.linalg.inv(D * G.T * F.T * K * F)
+        print("F: {}, G:{}".format(F,G))
+        if (n_iter % 5) == 0:
+            los = losses(X,np.dot(X,W),G)
+            result.append([n_iter,losses])
+
+
+    return F, G, result
 
 #(BaseEstimator, TransformerMixin)
 class semi_NMF:
