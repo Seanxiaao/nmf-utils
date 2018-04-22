@@ -3,6 +3,8 @@ import data, util
 import argparse
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import plotly as pyt
 import time
 from sklearn.cluster import MiniBatchKMeans
 from sklearn import preprocessing
@@ -13,7 +15,7 @@ def main(arg):
     source_data = data.Biofile(arg)
     sample = source_data.get_header()
     feature = source_data.get_index()
-    sample_size, feature_size = 60, 9000
+    sample_size, feature_size = 60, 12042
     #xshape = (106 12042)
     X = source_data.get_matrix().T[:sample_size, :feature_size]
     #X = np.array([[1.0,2.0,3.0],[-3.0,4.0,5.0],[1.0, -2.0, 3.0]])
@@ -151,50 +153,156 @@ def test_kernel():
                   ])
     #X = np.array([[1.0 ,0.0], [0.0, 1.0]])
     #estimated = util.semi_non_negative_factorization(X)
-    estimated = util.semi_non_negative_factorization_with_straint(X, max_iter = 10, alpha = 0.5, beta = 0.5)
-    #estimated2 = util.kernel_non_negative_factorization(X, kernel= 'poly', parameter = 0.5)[1]
+    #estimated = util.semi_non_negative_factorization_with_straint(X, max_iter = 10, alpha = 0.5, beta = 0.5)
+    estimated = util.kernel_non_negative_factorization(X, kernel= 'poly', parameter = 0.5)[1]
     print("kernel result is {}".format(estimated[1]))
 
-if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-d", "--data", required = False,
-	help= "path to input data file")
-    ap.add_argument("-t", "--test", required = False,
-    help = "test started !")
-    args = vars(ap.parse_args())
-    if args["data"]:
-        main(args["data"])
-
-    if args["test"] == "sample":
-        test_result()
-    elif args["test"] == "Kmeans":
-        test_kmeans_result()
-    elif args["test"] == "draw":
-        test_draw()
-    elif args["test"] == "kernel":
-        test_kernel()
+def test_plot(arg):
 
     """
-    nmf_model = util.NMF(n_components = 4)
-    item_dis = nmf_model.fit(values)
-    user_dis = nmf_model.components_
-    #there should be some kinds of graphs here
+    X = np.array([[1.3, 1.8, 4.8, 7.1, 5.0, 5.2, 8.0],
+                  [1.5, 6.9, 3.9, -5.5, -8.5, -3.9, -5.5],
+                  [6.5, 1.6, 8.2, -7.2, -8.7, -7.9, -5.2],
+                  [3.8, 8.3, 4.7, 6.4, 7.5, 3.2, 7.4],
+                  [-7.3, -1.8, -2.1, 2.7, 6.8, 4.8, 6.2]
+                  ])
+    """
+    source_data = data.Biofile(arg)
+    sample = source_data.get_header()
+    feature = source_data.get_index()
+    sample_size, feature_size = 106, 20
+    sample = sample[:sample_size]
+    #xshape = (106 12042)
+    print(sample, feature)
+    X = source_data.get_matrix().T[:sample_size, :feature_size]
+    semi_r = util.semi_non_negative_factorization(X, max_iter = 60, n_components = 2)
+    semi_r_con = util.semi_non_negative_factorization_with_straint(X, max_iter = 60, n_components = 2, alpha = 0.5, beta = 0.5)
+    semi_r_con1 = util.semi_non_negative_factorization_with_straint(X, max_iter = 60, n_components = 2, alpha = 1, beta = 0.5)
+    semi_r_con2 = util.semi_non_negative_factorization_with_straint(X, max_iter = 100, n_components = 2, alpha = 0.5, beta = 1)
+    cvx_r = util.convex_non_negative_factorization(X, max_iter = 60, n_components = 2)
+    G, G1, G2, G4, G5 =  semi_r[1], semi_r_con[1], cvx_r[1], semi_r_con1[1], semi_r_con2[1]
+    result, result1, result2, result3, result4 = semi_r[2], semi_r_con[2], cvx_r[2], semi_r_con1[2], semi_r_con1[2]
+    x = [i for i in range(30)]
+    # plot the losses function
+    plt.title("losses function during iteration")
+    plt.xlabel("iteration times")
+    plt.ylabel("losses")
+
+    plt.plot(x, result[:30], 'r', marker = '.', label = 'sNMF')
+    plt.plot(x, result1[:30], 'b', marker ='.' , label = 'con-sNMF(0.5, 0.5)')
+    plt.plot(x, result3[:30], 'c', marker ='.', label = 'con-sNMF(0, 0.5)')
+    plt.plot(x, result4[:30], 'm', marker ='.', label = 'con-sNMF(0.5, 1)')
+    plt.plot(x, result2[:30], 'y', marker ='.' ,label = 'cvx-NMF')
+
+    plt.legend(bbox_to_anchor=[1,1])
+    plt.grid()
+    plt.show()
+    plt.savefig("figure1.png", dpi = 300)
+    plt.close()
+    #plot the clustering result
     plt1 = plt
-    plt1.plot(item_dis[:, 0], item_dis[:, 1], 'ro')
-    plt1.draw()#直接画出矩阵，只打了点，下面对图plt1进行一些设置
 
-    plt1.xlim((-1, 3))
-    plt1.ylim((-1, 3))
-    plt1.title(u'the distribution of items (NMF)')#设置图的标题
+    plt1.subplot(221)
+    plt1.plot(G[:,0], G[:,1], 'ro')
+    plt1.title(u'the distribution of items(sNMF)')
+    items = zip(feature, G)
+    for item in items:
+        item_name, item_data = item[0], item[1]
+        plt1.text(item_data[0], item_data[1], item_name,
+                  horizontalalignment='center',
+                  verticalalignment='top')
 
-    count = 1
-    zipitem = zip(item, item_dis)#把电影标题和电影的坐标联系在一起
+    plt1.subplot(222)
+    plt1.plot(G1[:,0], G1[:,1], 'bo')
 
-    for item in zipitem:
-        item_name = item[0]
-        data = item[1]
-        plt1.text(data[0], data[1], item_name,
-                fontproperties=fontP,
-                horizontalalignment='center',
-                verticalalignment='top')
-    """
+    plt1.title(u'the distribution of items(sNMF(0.5, 0.5))')
+    items = zip(feature, G1)
+    for item in items:
+        item_name, item_data = item[0], item[1]
+        plt1.text(item_data[0], item_data[1], item_name,
+                  horizontalalignment='center',
+                  verticalalignment='top')
+
+    plt1.subplot(223)
+    plt1.plot(G4[:,0], G4[:,1], 'co')
+    plt1.title(u'the distribution of items(sNMF(0, 0.5))')
+    items = zip(feature, G4)
+    for item in items:
+        item_name, item_data = item[0], item[1]
+        plt1.text(item_data[0], item_data[1], item_name,
+                  horizontalalignment='center',
+                  verticalalignment='top')
+
+    plt1.subplot(224)
+    plt1.plot(G5[:,0], G5[:,1], 'mo')
+    plt1.title(u'the distribution of items(sNMF(0.5,1))')
+    items = zip(feature, G4)
+    for item in items:
+        item_name, item_data = item[0], item[1]
+        plt1.text(item_data[0], item_data[1], item_name,
+                  horizontalalignment='center',
+                  verticalalignment='top')
+
+    plt1.show()
+
+def plot_heatmap_cvx(arg):
+    source_data = data.Biofile(arg)
+    sample = source_data.get_header()
+    feature = source_data.get_index()
+    sample_size, feature_size = 60, 12042
+    #xshape = (106 12042)
+    #X = source_data.get_matrix().T[:sample_size, :feature_size]
+    X = np.array([[1.3, 1.8, 4.8, 7.1, 5.0, 5.2, 8.0],
+                  [1.5, 6.9, 3.9, -5.5, -8.5, -3.9, -5.5],
+                  [6.5, 1.6, 8.2, -7.2, -8.7, -7.9, -5.2],
+                  [3.8, 8.3, 4.7, 6.4, 7.5, 3.2, 7.4],
+                  [-7.3, -1.8, -2.1, 2.7, 6.8, 4.8, 6.2]
+                  ])
+    cvx_r = util.convex_non_negative_factorization(X, max_iter = 100, n_components = 2)
+    W, G = cvx_r[0], cvx_r[1]
+    print(W.shape, G.shape)
+
+
+    sample = sample[:sample_size]
+    trace = pyt.graph_objs.Heatmap(z = X.T,x = sample, y = feature)
+    trace1 = pyt.graph_objs.Heatmap(z = W, y = feature)
+    trace2 = pyt.graph_objs.Heatmap(z = G, y = feature)
+
+    fig = pyt.tools.make_subplots(rows = 1, cols = 3,subplot_titles=('input matrix',
+                                                                     'clustering matrix',
+                                                                     'probility matrix'))
+    fig.append_trace(trace, 1, 1)
+    fig.append_trace(trace1, 1, 2)
+    fig.append_trace(trace2, 1, 3)
+
+    fig['layout'].update(height=600, width=600, title= 'HeatMap for convex-nmf')
+    pyt.offline.plot(fig)
+
+if __name__ == '__main__':
+   ap = argparse.ArgumentParser()
+   ap.add_argument("-d", "--data", required = False,
+   help= "path to input data file")
+   ap.add_argument("-t", "--test", required = False,
+   help = "test started !")
+   ap.add_argument("-dr", "--draw", required = False,
+   help = "draw some graphs!")
+   args = vars(ap.parse_args())
+   if args["data"]:
+       main(args["data"])
+
+   if args["draw"]:
+       #test_plot(args["draw"])
+       plot_heatmap_cvx(args["draw"])
+
+
+   if args["test"]:
+       if args["test"] == "sample":
+           test_result()
+       elif args["test"] == "Kmeans":
+           test_kmeans_result()
+       elif args["test"] == "draw":
+           test_draw()
+       elif args["test"] == "kernel":
+           test_kernel()
+       else:
+           raise SyntaxError("needed test from: sample, Kmeans, draw, kernel")
