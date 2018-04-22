@@ -141,10 +141,10 @@ def semi_non_negative_factorization(X, F=None, G=None, n_components = None,
         G = up._update_snmf_fast(X, F, G, 0.000001)
         F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
         #print("F:{} \n G:{}".format(preprocessing.normalize(F,norm='l2'),preprocessing.normalize(G,norm='l2')))
-        if (n_iter % 5) == 0:
+        if (n_iter % 1) == 0:
             los = losses(X, F, G)
             print("It is {} times iteration for semi_NMF with losses :{} ".format(n_iter, los))
-            result.append([n_iter,losses])
+            result.append(los)
     return F, G, result
     ## write some simple test now to check the mathods value
 
@@ -196,8 +196,8 @@ def semi_non_negative_factorization_with_straint(X, F=None, G=None, n_components
         #print("F:{} \n G:{}".format(preprocessing.normalize(F,norm='l2'),preprocessing.normalize(G,norm='l2')))
         if (n_iter % 1) == 0:
             los = losses(X, F, G)
-            print("It is {} times iteration for semi_NMF with losses :{} ".format(n_iter, los))
-            result.append([n_iter,losses])
+            print("It is {} times iteration for semi_NMF({}, {}) with losses :{} ".format(n_iter, alpha, beta, los))
+            result.append(los)
     return F, G, result
     ## write some simple test now to check the mathods value
 
@@ -257,10 +257,10 @@ def convex_non_negative_factorization(X, F=None, G=None, n_components = None,
     #        for i in range(n_features):
     #            W[i][label] = math.sqrt(numerator_W[i, label]/ denominator_W[i, label])
 
-        if (n_iter % 5) == 0:
+        if (n_iter % 1) == 0:
             los = losses(X,np.dot(X,W),G)
             print("It is {} times iteration for convex-NMF with losses {} and sparseness:".format(n_iter, los))
-            result.append([n_iter,losses])
+            result.append(los)
     return W, G, result
 
 def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
@@ -291,12 +291,26 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
         for i in range(len(D)):
             temp_lst.append(D[i, i])
         D = np.diag([x for x in temp_lst])
-        F *= K * D * G.T * np.linalg.inv(K*F*G*D*G.T)
-        G *= D * K * F * np.linalg.inv(D * G.T * F.T * K * F)
+        tempF = K * D * G.T * np.linalg.inv(K*F*G*D*G.T)
+        for i in range(n_features):
+            for j in range(n_components):
+                if np.isnan(tempF[i, j]):
+                    pass
+                else:
+                    F[i, j] *= tempF[i, j]
+
+        tempG = D * K * F * np.linalg.inv(D * G.T * F.T * K * F)
+        for i in range(n_components):
+            for j in range(n_features):
+                if np.isnan(tempG[i, j]):
+                    pass
+                else:
+                    G[i, j] *= tempG[i, j]
+
         print("F: {}, G:{}".format(F,G))
         if (n_iter % 5) == 0:
             los = losses(X,np.dot(X,W),G)
-            result.append([n_iter,losses])
+            result.append([n_iter,los])
 
 
     return F, G, result
