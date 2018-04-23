@@ -8,6 +8,7 @@ import plotly as pyt
 import time
 from sklearn.cluster import MiniBatchKMeans
 from sklearn import preprocessing
+from hopkins import hopkins
 
 
 def main(arg):
@@ -154,8 +155,11 @@ def test_kernel():
     #X = np.array([[1.0 ,0.0], [0.0, 1.0]])
     #estimated = util.semi_non_negative_factorization(X)
     #estimated = util.semi_non_negative_factorization_with_straint(X, max_iter = 10, alpha = 0.5, beta = 0.5)
-    estimated = util.kernel_non_negative_factorization(X, kernel= 'poly', parameter = 0.5)[1]
+    estimated = util.kernel_non_negative_factorization(X, n_components = 2, max_iter = 30, kernel= 'poly', parameter = 2)
+    print("****" * 10)
+    estimated1 = util.kernel_non_negative_factorization(X, n_components = 2,max_iter = 30, kernel= 'poly', parameter = 3)
     print("kernel result is {}".format(estimated[1]))
+    print("kernel result is {}".format(estimated1[1]))
 
 def test_plot(arg):
 
@@ -170,16 +174,16 @@ def test_plot(arg):
     source_data = data.Biofile(arg)
     sample = source_data.get_header()
     feature = source_data.get_index()
-    sample_size, feature_size = 106, 20
+    sample_size, feature_size = 106, 12042
     sample = sample[:sample_size]
     #xshape = (106 12042)
     print(sample, feature)
     X = source_data.get_matrix().T[:sample_size, :feature_size]
-    semi_r = util.semi_non_negative_factorization(X, max_iter = 60, n_components = 2)
-    semi_r_con = util.semi_non_negative_factorization_with_straint(X, max_iter = 60, n_components = 2, alpha = 0.5, beta = 0.5)
-    semi_r_con1 = util.semi_non_negative_factorization_with_straint(X, max_iter = 60, n_components = 2, alpha = 1, beta = 0.5)
-    semi_r_con2 = util.semi_non_negative_factorization_with_straint(X, max_iter = 100, n_components = 2, alpha = 0.5, beta = 1)
-    cvx_r = util.convex_non_negative_factorization(X, max_iter = 60, n_components = 2)
+    semi_r = util.semi_non_negative_factorization(X.T, max_iter = 100, n_components = 2)
+    semi_r_con = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 100, n_components = 2, alpha = 0.5, beta = 0.5)
+    semi_r_con1 = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 100, n_components = 2, alpha = 1, beta = 0.5)
+    semi_r_con2 = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 100, n_components = 2, alpha = 0.5, beta = 1)
+    cvx_r = util.convex_non_negative_factorization(X.T, max_iter = 60, n_components = 2)
     G, G1, G2, G4, G5 =  semi_r[1], semi_r_con[1], cvx_r[1], semi_r_con1[1], semi_r_con2[1]
     result, result1, result2, result3, result4 = semi_r[2], semi_r_con[2], cvx_r[2], semi_r_con1[2], semi_r_con1[2]
     x = [i for i in range(30)]
@@ -201,72 +205,89 @@ def test_plot(arg):
     plt.close()
     #plot the clustering result
     plt1 = plt
-
     plt1.subplot(221)
     plt1.plot(G[:,0], G[:,1], 'ro')
     plt1.title(u'the distribution of items(sNMF)')
-    items = zip(feature, G)
-    for item in items:
-        item_name, item_data = item[0], item[1]
-        plt1.text(item_data[0], item_data[1], item_name,
-                  horizontalalignment='center',
-                  verticalalignment='top')
+    #items = zip(sample, G)
+    #for item in items:
+    #    item_name, item_data = item[0], item[1]
+    #    plt1.text(item_data[0], item_data[1], item_name,
+    #              horizontalalignment='center',
+    #              verticalalignment='top')
 
     plt1.subplot(222)
     plt1.plot(G1[:,0], G1[:,1], 'bo')
 
     plt1.title(u'the distribution of items(sNMF(0.5, 0.5))')
-    items = zip(feature, G1)
-    for item in items:
-        item_name, item_data = item[0], item[1]
-        plt1.text(item_data[0], item_data[1], item_name,
-                  horizontalalignment='center',
-                  verticalalignment='top')
+
+    #items = zip(sample, G1)
+    #for item in items:
+    #    item_name, item_data = item[0], item[1]
+    #    plt1.text(item_data[0], item_data[1], item_name,
+    #              horizontalalignment='center',
+    #              verticalalignment='top')
 
     plt1.subplot(223)
     plt1.plot(G4[:,0], G4[:,1], 'co')
     plt1.title(u'the distribution of items(sNMF(0, 0.5))')
-    items = zip(feature, G4)
-    for item in items:
-        item_name, item_data = item[0], item[1]
-        plt1.text(item_data[0], item_data[1], item_name,
-                  horizontalalignment='center',
-                  verticalalignment='top')
+    #items = zip(sample, G4)
+    #for item in items:
+    #    item_name, item_data = item[0], item[1]
+    #    plt1.text(item_data[0], item_data[1], item_name,
+    #              horizontalalignment='center',
+    #              verticalalignment='top')
 
     plt1.subplot(224)
-    plt1.plot(G5[:,0], G5[:,1], 'mo')
-    plt1.title(u'the distribution of items(sNMF(0.5,1))')
-    items = zip(feature, G4)
-    for item in items:
-        item_name, item_data = item[0], item[1]
-        plt1.text(item_data[0], item_data[1], item_name,
-                  horizontalalignment='center',
-                  verticalalignment='top')
+    plt1.plot(G2[:,0], G2[:,1], 'mo')
+    plt1.title(u'the distribution of items(convexNMF)')
+    #items = zip(sample, G2)
+    #for item in items:
+    #    item_name, item_data = item[0], item[1]
+    #    plt1.text(item_data[0], item_data[1], item_name,
+    #              horizontalalignment='center',
+    #              verticalalignment='top')
 
     plt1.show()
+
+def plot_clustering_cvx(arg):
+    source_data = data.Biofile(arg)
+    sample = source_data.get_header()
+    feature = source_data.get_index()
+    sample_size, feature_size = 106, 12042
+    #xshape = (106 12042)
+    X = source_data.get_matrix().T[:sample_size, :feature_size]
+    cvx_r = util.convex_non_negative_factorization(X.T, max_iter = 100, n_components = 4)
+    G = cvx_r[1]
+    sample = sample[:sample_size]
+
+    plt.subplot(111)
+    plt.plot(G[:,0], G[:,1], 'co')
+    plt.title(u'the distribution of items(convex-nmf)')
+    #items = zip(sample, G)
+    #for item in items:
+    #    item_name, item_data = item[0], item[1]
+    #    plt.text(item_data[0], item_data[1], item_name,
+    #              horizontalalignment='center',
+    #              verticalalignment='top')
+    plt.show()
 
 def plot_heatmap_cvx(arg):
     source_data = data.Biofile(arg)
     sample = source_data.get_header()
     feature = source_data.get_index()
-    sample_size, feature_size = 60, 12042
+    sample_size, feature_size = 106, 12042
     #xshape = (106 12042)
-    #X = source_data.get_matrix().T[:sample_size, :feature_size]
-    X = np.array([[1.3, 1.8, 4.8, 7.1, 5.0, 5.2, 8.0],
-                  [1.5, 6.9, 3.9, -5.5, -8.5, -3.9, -5.5],
-                  [6.5, 1.6, 8.2, -7.2, -8.7, -7.9, -5.2],
-                  [3.8, 8.3, 4.7, 6.4, 7.5, 3.2, 7.4],
-                  [-7.3, -1.8, -2.1, 2.7, 6.8, 4.8, 6.2]
-                  ])
-    cvx_r = util.convex_non_negative_factorization(X, max_iter = 100, n_components = 2)
+    X = source_data.get_matrix().T[:sample_size, :feature_size]
+    cvx_r = util.semi_non_negative_factorization(X.T, max_iter=100, n_components=2)
+    #cvx_r = util.convex_non_negative_factorization(X.T, max_iter = 100, n_components = 2)
     W, G = cvx_r[0], cvx_r[1]
-    print(W.shape, G.shape)
+    #print(np.dot(X.T ,W))
 
 
     sample = sample[:sample_size]
-    trace = pyt.graph_objs.Heatmap(z = X.T,x = sample, y = feature)
-    trace1 = pyt.graph_objs.Heatmap(z = W, y = feature)
-    trace2 = pyt.graph_objs.Heatmap(z = G, y = feature)
+    trace = pyt.graph_objs.Heatmap(z = X,x = feature, y = sample)
+    trace1 = pyt.graph_objs.Heatmap(z = W , y = feature)
+    trace2 = pyt.graph_objs.Heatmap(z = G, y = sample)
 
     fig = pyt.tools.make_subplots(rows = 1, cols = 3,subplot_titles=('input matrix',
                                                                      'clustering matrix',
@@ -275,7 +296,7 @@ def plot_heatmap_cvx(arg):
     fig.append_trace(trace1, 1, 2)
     fig.append_trace(trace2, 1, 3)
 
-    fig['layout'].update(height=600, width=600, title= 'HeatMap for convex-nmf')
+    fig['layout'].update(height=1200, width=1200, title= 'HeatMap for semi-nmf')
     pyt.offline.plot(fig)
 
 if __name__ == '__main__':
@@ -286,14 +307,19 @@ if __name__ == '__main__':
    help = "test started !")
    ap.add_argument("-dr", "--draw", required = False,
    help = "draw some graphs!")
+   ap.add_argument("-hp", "--hopkins", required = False,
+   help = "find if a set contain cluster")
    args = vars(ap.parse_args())
+   if args["hopkins"]:
+       hopkins(args["hopkins"])
+
    if args["data"]:
        main(args["data"])
 
    if args["draw"]:
-       #test_plot(args["draw"])
-       plot_heatmap_cvx(args["draw"])
-
+       test_plot(args["draw"])
+       #plot_heatmap_cvx(args["draw"])
+       #plot_clustering_cvx(args["draw"])
 
    if args["test"]:
        if args["test"] == "sample":
