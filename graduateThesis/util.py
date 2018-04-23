@@ -282,34 +282,47 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
                          "positive; got (tol=%r)" % tol)
 
     K, Ir = kernel_M(X, kernel, parameter), np.eye(n_features)
-    F, G = np.random.rand(n_features, n_components), np.random.rand(n_components, n_features)
+    F = np.random.rand(n_features, n_components) # G is sensitive for initial position
+    Ht = np.zeros((n_components, n_features))
+    E = np.ones((n_components, n_features))
+    kmeans = KMeans(n_clusters = n_components, random_state = 0).fit(X.T)
+    labels = kmeans.labels_
+    #test should be fine
+    for i, label in enumerate(labels):
+        Ht[label][i] = 1
+    D_inv = np.diag([1/sum(row) for row in Ht])
+    Gt = Ht + 0.2 * E
+    #initialized G0 and W0
+    G = Gt
     result = []
     for n_iter in range(max_iter):
-        W = Ir - F * G
+        W = Ir - np.dot(F, G)
         D = np.dot(W.T, np.dot(K, W)) ** (-1/2)
         temp_lst = []
         for i in range(len(D)):
             temp_lst.append(D[i, i])
         D = np.diag([x for x in temp_lst])
-        tempF = K * D * G.T * np.linalg.inv(K*F*G*D*G.T)
+        numerator, denominator =np.array(np.dot(K,np.dot(D, G.T))), \
+                                np.array(np.dot(K,np.dot(F, np.dot(G, np.dot(D,G.T)))))
+        #tempF = np.dot(K,np.dot(D, np.dot(G.T * np.linalg.inv(np.dot(K,np.dot(F, np.dot(G, np.dot(D,G.T))))))))
         for i in range(n_features):
             for j in range(n_components):
-                if np.isnan(tempF[i, j]):
+                if denominator[i, j] == 0:
                     pass
                 else:
-                    F[i, j] *= tempF[i, j]
+                    F[i, j] *= numerator[i, j]/denominator[i, j]
 
-        tempG = D * K * F * np.linalg.inv(D * G.T * F.T * K * F)
+        numerator, denominator = np.dot(D, np.dot(K, F)), np.dot(D, np.dot(G.T,np.dot( F.T ,np.dot( K , F))))
+        #tempG = np.dot(D, np.dot(K ,np.dot(F , np.linalg.inv(np.dot(D , np.dot( G.T ,np.dot( F.T ,np.dot( K , F))))))))
         for i in range(n_components):
             for j in range(n_features):
-                if np.isnan(tempG[i, j]):
+                if denominator[j, i] == 0:
                     pass
                 else:
-                    G[i, j] *= tempG[i, j]
-
-        print("F: {}, G:{}".format(F,G))
-        if (n_iter % 5) == 0:
-            los = losses(X,np.dot(X,W),G)
+                    G[i, j] *= numerator[j, i] / denominator[j, i]
+        if (n_iter % 1) == 0:
+            los = losses(X,np.dot(X,F),G.T)
+            print("It is {} times iteration for kernel-NMF with losses {} and sparseness:".format(n_iter, los))
             result.append([n_iter,los])
 
 
