@@ -41,12 +41,19 @@ def _update_snmf_fast(np.ndarray[np.double_t, ndim=2] X,
     cdef np.ndarray[np.double_t, ndim=2] numerator
     cdef np.ndarray[np.double_t, ndim=2] denominator
 
+    cdef np.ndarray[np.double_t, ndim=2] GFtF
+    cdef np.ndarray[np.double_t, ndim=2] GFtF_n
+    cdef np.ndarray[np.double_t, ndim=2] GFtF_p
 
     #with nogil: calculate G
     XtF, FtF = np.dot(X.T, F), np.dot(F.T, F)
     XtF_p,  FtF_p = M_pos(XtF), M_pos(FtF)
     XtF_n,  FtF_n = XtF_p - XtF, FtF_p - FtF
+    GFtF = np.dot(G, FtF)
+    GFtF_p = M_pos(GFtF)
+    GFtF_n = GFtF_p - GFtF
     numerator, denominator = XtF_p + np.dot(G, FtF_n), XtF_n + np.dot(G, FtF_p)
+    #numerator, denominator = XtF_p + GFtF_n, XtF_n + GFtF_p
     for label in range(n_components):
         for i in range(n_features):
             q, p = numerator[i,label], denominator[i, label]
