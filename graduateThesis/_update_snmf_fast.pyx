@@ -64,7 +64,7 @@ def _update_snmf_fast(np.ndarray[np.double_t, ndim=2] X,
             #elif q != 0:         which may means the result is not good
             #   G[i][label] = sqrt(numerator[i, label]/ resizor)
             else:
-               G[i][label] = sqrt(numerator[i, label] /
+               G[i][label] *= sqrt(numerator[i, label] /
                                 p)
 
     """
@@ -115,7 +115,7 @@ def _update_snmf_fast_constraint(np.ndarray[np.double_t, ndim=2] X,
             #elif q != 0:         which may means the result is not good
             #   G[i][label] = sqrt(numerator[i, label]/ resizor)
             else:
-               G[i][label] = sqrt(numerator[i, label] /
+               G[i][label] *= sqrt(numerator[i, label] /
                                 p)
 
     """

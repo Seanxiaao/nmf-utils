@@ -2111,6 +2111,7 @@ static PyObject *__pyx_pf_17_update_snmf_fast__update_snmf_fast(CYTHON_UNUSED Py
   int __pyx_t_30;
   Py_ssize_t __pyx_t_31;
   Py_ssize_t __pyx_t_32;
+  Py_ssize_t __pyx_t_33;
   __Pyx_RefNannySetupContext("_update_snmf_fast", 0);
   __pyx_pybuffer_XtF.pybuffer.buf = NULL;
   __pyx_pybuffer_XtF.refcount = 0;
@@ -2824,35 +2825,42 @@ static PyObject *__pyx_pf_17_update_snmf_fast__update_snmf_fast(CYTHON_UNUSED Py
       /* "_update_snmf_fast.pyx":67
  *             #   G[i][label] = sqrt(numerator[i, label]/ resizor)
  *             else:
- *                G[i][label] = sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
+ *                G[i][label] *= sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
  *                                 p)
  * 
  */
       /*else*/ {
-        __pyx_t_31 = __pyx_v_i;
-        __pyx_t_32 = __pyx_v_label;
+        __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_G), __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 67, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        __pyx_t_31 = __pyx_v_label;
+        __pyx_t_7 = __Pyx_GetItemInt(__pyx_t_2, __pyx_t_31, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 67, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_7);
+        __pyx_t_32 = __pyx_v_i;
+        __pyx_t_33 = __pyx_v_label;
 
         /* "_update_snmf_fast.pyx":68
  *             else:
- *                G[i][label] = sqrt(numerator[i, label] /
+ *                G[i][label] *= sqrt(numerator[i, label] /
  *                                 p)             # <<<<<<<<<<<<<<
  * 
  *     """
  */
-        __pyx_t_2 = PyFloat_FromDouble(sqrt(((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_numerator.rcbuffer->pybuffer.buf, __pyx_t_31, __pyx_pybuffernd_numerator.diminfo[0].strides, __pyx_t_32, __pyx_pybuffernd_numerator.diminfo[1].strides)) / __pyx_v_p))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 67, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_2);
+        __pyx_t_3 = PyFloat_FromDouble(sqrt(((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_numerator.rcbuffer->pybuffer.buf, __pyx_t_32, __pyx_pybuffernd_numerator.diminfo[0].strides, __pyx_t_33, __pyx_pybuffernd_numerator.diminfo[1].strides)) / __pyx_v_p))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 67, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
 
         /* "_update_snmf_fast.pyx":67
  *             #   G[i][label] = sqrt(numerator[i, label]/ resizor)
  *             else:
- *                G[i][label] = sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
+ *                G[i][label] *= sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
  *                                 p)
  * 
  */
-        __pyx_t_7 = __Pyx_GetItemInt(((PyObject *)__pyx_v_G), __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 67, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_7);
-        if (unlikely(__Pyx_SetItemInt(__pyx_t_7, __pyx_v_label, __pyx_t_2, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0) < 0)) __PYX_ERR(0, 67, __pyx_L1_error)
+        __pyx_t_6 = PyNumber_InPlaceMultiply(__pyx_t_7, __pyx_t_3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 67, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        if (unlikely(__Pyx_SetItemInt(__pyx_t_2, __pyx_t_31, __pyx_t_6, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0) < 0)) __PYX_ERR(0, 67, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       }
       __pyx_L7:;
@@ -3125,6 +3133,7 @@ static PyObject *__pyx_pf_17_update_snmf_fast_2_update_snmf_fast_constraint(CYTH
   int __pyx_t_29;
   Py_ssize_t __pyx_t_30;
   Py_ssize_t __pyx_t_31;
+  Py_ssize_t __pyx_t_32;
   __Pyx_RefNannySetupContext("_update_snmf_fast_constraint", 0);
   __pyx_pybuffer_Ir.pybuffer.buf = NULL;
   __pyx_pybuffer_Ir.refcount = 0;
@@ -3790,35 +3799,42 @@ static PyObject *__pyx_pf_17_update_snmf_fast_2_update_snmf_fast_constraint(CYTH
       /* "_update_snmf_fast.pyx":118
  *             #   G[i][label] = sqrt(numerator[i, label]/ resizor)
  *             else:
- *                G[i][label] = sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
+ *                G[i][label] *= sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
  *                                 p)
  * 
  */
       /*else*/ {
-        __pyx_t_30 = __pyx_v_i;
-        __pyx_t_31 = __pyx_v_label;
+        __pyx_t_5 = __Pyx_GetItemInt(((PyObject *)__pyx_v_G), __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 118, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        __pyx_t_30 = __pyx_v_label;
+        __pyx_t_11 = __Pyx_GetItemInt(__pyx_t_5, __pyx_t_30, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 118, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
+        __pyx_t_31 = __pyx_v_i;
+        __pyx_t_32 = __pyx_v_label;
 
         /* "_update_snmf_fast.pyx":119
  *             else:
- *                G[i][label] = sqrt(numerator[i, label] /
+ *                G[i][label] *= sqrt(numerator[i, label] /
  *                                 p)             # <<<<<<<<<<<<<<
  * 
  *     """
  */
-        __pyx_t_5 = PyFloat_FromDouble(sqrt(((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_numerator.rcbuffer->pybuffer.buf, __pyx_t_30, __pyx_pybuffernd_numerator.diminfo[0].strides, __pyx_t_31, __pyx_pybuffernd_numerator.diminfo[1].strides)) / __pyx_v_p))); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 118, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_5);
+        __pyx_t_3 = PyFloat_FromDouble(sqrt(((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_numerator.rcbuffer->pybuffer.buf, __pyx_t_31, __pyx_pybuffernd_numerator.diminfo[0].strides, __pyx_t_32, __pyx_pybuffernd_numerator.diminfo[1].strides)) / __pyx_v_p))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 118, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
 
         /* "_update_snmf_fast.pyx":118
  *             #   G[i][label] = sqrt(numerator[i, label]/ resizor)
  *             else:
- *                G[i][label] = sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
+ *                G[i][label] *= sqrt(numerator[i, label] /             # <<<<<<<<<<<<<<
  *                                 p)
  * 
  */
-        __pyx_t_11 = __Pyx_GetItemInt(((PyObject *)__pyx_v_G), __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 118, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_11);
-        if (unlikely(__Pyx_SetItemInt(__pyx_t_11, __pyx_v_label, __pyx_t_5, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0) < 0)) __PYX_ERR(0, 118, __pyx_L1_error)
+        __pyx_t_1 = PyNumber_InPlaceMultiply(__pyx_t_11, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 118, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        if (unlikely(__Pyx_SetItemInt(__pyx_t_5, __pyx_t_30, __pyx_t_1, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0) < 0)) __PYX_ERR(0, 118, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       }
       __pyx_L7:;
