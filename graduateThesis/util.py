@@ -5,9 +5,6 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state, check_array
-#from sklearn.utils.extmath import fast_dot
-#from _update_snmf_fast import _update_snmf_fast
-#from _update_snmf_fast import _update_cvxnmf_fast
 import _update_snmf_fast as up
 
 EPSILON = np.finfo(np.float32).eps
@@ -56,9 +53,6 @@ def M_pos(a):
 def losses(X, F, G):
     return np.linalg.norm(X - np.dot(F,G.T))
 
-def sparscity(X):
-    n = X.shape[0] * X.shape[1]
-    return (n - (np.linalg.norm(X, ord = 1)/np.linalg.norm(X, ord = 2)) ** 2)/(n - 1)
 
 def kernel_M(X, initialization, parameter):
     shape, Xt = X.shape[1], X.T
@@ -83,6 +77,13 @@ def pol_kernel(x, y, dimension):
 def sig_kernel(x, y, alpha):
     return np.tanh(alpha * np.dot(x.T, y))
 
+#----quality function ----
+def sparscity(X):
+    n = X.shape[0] * X.shape[1]
+    return (n - (np.linalg.norm(X, ord = 1)/np.linalg.norm(X, ord = 2)) ** 2)/(n - 1)
+
+def accuracy(X):
+    pass
 
 #---- algorithm ----
 #we can check it's sensitiveness to initials and try transfer learning
@@ -327,6 +328,7 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
 
 
     return F, G, result
+
 
 #(BaseEstimator, TransformerMixin)
 class semi_NMF:
