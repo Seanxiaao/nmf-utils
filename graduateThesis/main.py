@@ -17,10 +17,6 @@ def main(arg):
     sample = source_data.get_header()
     feature = source_data.get_index()
     X = source_data.get_matrix()
-    #sample_size, feature_size = 60, 12042
-    #xshape = (106 12042)
-    #X = source_data.get_matrix().T[:sample_size, :feature_size]
-    #X = np.array([[1.0,2.0,3.0],[-3.0,4.0,5.0],[1.0, -2.0, 3.0]])
     print("the frobenis norm of X is {}!".format(np.linalg.norm(X)))
     #clustering
     component = input("please input the number of cluster you want:")
@@ -30,6 +26,7 @@ def main(arg):
     method = input("input the method of nmf you want:")
     if method not in ["snmf", "csnmf", "cvxnmf", "knmf"]:
         raise ValueError("the method you put in is not available now")
+
     if method == "snmf":
         print("semi-nmf begins")
         F, G, result1 = util.semi_non_negative_factorization(X, n_components = component,max_iter = 100)
@@ -43,33 +40,21 @@ def main(arg):
     if method == "cvxnmf":
         print("convex-nmf begins")
         F, G, result = util.convex_non_negative_factorization(X, n_components= component, max_iter=100)
-    #print("\n")
-    #F1, G1, result2 = util.convex_non_negative_factorization(X, n_components = group,max_iter = 100)
     if method == "knmf":
         k = input("the kernel is:")
         p = input("parameter for kernel is:")
         p = float(p)
         F, G, result = util.kernel_non_negative_factorization(X, n_components = component, max_iter=100, kernel=k, parameter=p)
     F, G = preprocessing.normalize(F, norm='l2'),np.around(preprocessing.normalize(G, norm='l2'),3)
-    #F1, G1 = preprocessing.normalize(np.dot(X,F1), norm='l2'),np.around(preprocessing.normalize(G1, norm='l2'),3)
     end = time.time()
     G_df = pd.DataFrame(G, index= sample)
-    #W_df, W1_df, G_df, G1_df = pd.DataFrame(F, index = sample[:sample_size]), \
-    #                           pd.DataFrame(F1,index = sample[:sample_size]), \
-    #                           pd.DataFrame(G, index = feature[:feature_size]),\
-    #                           pd.DataFrame(G1,index = feature[:feature_size])
-    #W_df.to_csv('F_semi.csv')
-    #W1_df.to_csv('F1_cnvx.csv')
     G_df.to_csv('G_{}.csv'.format(method))
-    #G1_df.to_csv('G1_cnvx.csv')
     print (end - start)
     print("nmf finished, and the file of probility matrix is generated as csv in current folder")
-    #for row in W[:40]:
-    #    print ("--" * 20)
-    #    print (row)
 
-    #have to firstly understand the data
 
+
+#### below are some graph functions ####
 def test_draw():
     start = time.time()
     source_data = data.Biofile(arg)
@@ -204,24 +189,26 @@ def test_plot(arg):
     #xshape = (106 12042)
     print(sample, feature)
     X = source_data.get_matrix().T[:sample_size, :feature_size]
-    semi_r = util.semi_non_negative_factorization(X.T, max_iter = 100, n_components = 2)
-    semi_r_con = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 100, n_components = 2, alpha = 0.5, beta = 0.5)
-    semi_r_con1 = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 100, n_components = 2, alpha = 1, beta = 0.5)
-    semi_r_con2 = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 100, n_components = 2, alpha = 0.5, beta = 1)
-    cvx_r = util.convex_non_negative_factorization(X.T, max_iter = 60, n_components = 2)
-    G, G1, G2, G4, G5 =  semi_r[1], semi_r_con[1], cvx_r[1], semi_r_con1[1], semi_r_con2[1]
-    result, result1, result2, result3, result4 = semi_r[2], semi_r_con[2], cvx_r[2], semi_r_con1[2], semi_r_con1[2]
-    x = [i for i in range(30)]
+    semi_r = util.semi_non_negative_factorization(X.T, max_iter = 200, n_components = 2, initialization= 'Kmeans')
+    semi_r_con = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 400, n_components = 2, alpha = 100000, beta = 100000,initialization= 'Kmeans')
+    semi_r_con1 = util.semi_non_negative_factorization_with_straint(X.T, max_iter =200, n_components = 2, alpha = 10000, beta = 10000,initialization= 'Kmeans')
+    semi_r_con2 = util.convex_non_negative_factorization(X.T,  max_iter = 200, n_components=2)
+    #semi_r_con2 = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 200, n_components = 2, alpha = 0, beta = 4000,initialization= 'Kmeans')
+    semi_r_con3 = util.semi_non_negative_factorization_with_straint(X.T, max_iter = 200, n_components = 2, alpha = 2000, beta = 2000,initialization= 'Kmeans')
+    #semi_r_con3 = util.convex_non_negative_factorization(X.T, max_iter=30, n_components=2)
+    G, G1, G2, G4, G5 =  semi_r[1], semi_r_con[1], semi_r_con1[1], semi_r_con2[1], semi_r_con3[1]
+    result, result1, result2, result3, result4 = semi_r[2], semi_r_con[2], semi_r_con1[2], semi_r_con2[2], semi_r_con3[2]
+    x = [i for i in range(200)]
     # plot the losses function
     plt.title("losses function of {}".format(arg[:-4]))
     plt.xlabel("iteration times")
     plt.ylabel("losses")
 
-    plt.plot(x, result[:30], 'r', marker = '.', label = 'sNMF')
-    plt.plot(x, result1[:30], 'b', marker ='.' , label = 'con-sNMF(0.5, 0.5)')
-    plt.plot(x, result3[:30], 'c', marker ='.', label = 'con-sNMF(0, 0.5)')
-    plt.plot(x, result4[:30], 'm', marker ='.', label = 'con-sNMF(0.5, 1)')
-    plt.plot(x, result2[:30], 'y', marker ='.' ,label = 'cvx-NMF')
+    plt.plot(x, result[:200], 'r', marker = '.', label = 'sNMF')
+    plt.plot(x, result1[:200], 'b', marker ='.' , label = 'con-sNMF(4000, 4000)')
+    plt.plot(x, result2[:200], 'c', marker ='.', label = 'con-sNMF(4000, 0)')
+    plt.plot(x, result3[:200], 'm', marker ='.', label = 'con-sNMF(0, 4000)')
+    plt.plot(x, result4[:200], 'y', marker ='.' ,label = 'con-sNMF(2000, 2000)')
 
     plt.legend(bbox_to_anchor=[1,1])
     plt.grid()
@@ -243,7 +230,7 @@ def test_plot(arg):
     plt1.subplot(222)
     plt1.plot(G1[:,0], G1[:,1], 'bo')
 
-    plt1.title(u'the distribution of items(sNMF(0.5, 0.5))')
+    plt1.title(u'the distribution of items(sNMF(10^5, 10^5))')
 
     #items = zip(sample, G1)
     #for item in items:
@@ -253,8 +240,8 @@ def test_plot(arg):
     #              verticalalignment='top')
 
     plt1.subplot(223)
-    plt1.plot(G4[:,0], G4[:,1], 'co')
-    plt1.title(u'the distribution of items(sNMF(0, 0.5))')
+    plt1.plot(G2[:,0], G2[:,1], 'co')
+    plt1.title(u'the distribution of items(sNMF(10^4, 10^4))')
     #items = zip(sample, G4)
     #for item in items:
     #    item_name, item_data = item[0], item[1]
@@ -263,8 +250,8 @@ def test_plot(arg):
     #              verticalalignment='top')
 
     plt1.subplot(224)
-    plt1.plot(G2[:,0], G2[:,1], 'mo')
-    plt1.title(u'the distribution of items(convexNMF)')
+    plt1.plot(G4[:,0], G4[:,1], 'mo')
+    plt1.title(u'the distribution of items(convex-nmf))')
     #items = zip(sample, G2)
     #for item in items:
     #    item_name, item_data = item[0], item[1]
@@ -413,6 +400,7 @@ def plot_heatmap_cvx(arg):
     fig['layout'].update(height=1200, width=1200, title= 'HeatMap for semi-nmf')
     pyt.offline.plot(fig)
 
+
 if __name__ == '__main__':
    ap = argparse.ArgumentParser()
    ap.add_argument("-d", "--data", required = False,
@@ -425,7 +413,9 @@ if __name__ == '__main__':
    help = "find if a set contain cluster")
    args = vars(ap.parse_args())
    if args["hopkins"]:
-       hopkins(args["hopkins"])
+       X = data.Biofile(args["hopkins"]).table
+       result = hopkins(X)
+       print(result)
 
    if args["data"]:
        main(args["data"])
