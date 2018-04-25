@@ -109,11 +109,12 @@ def _update_snmf_fast_constraint(np.ndarray[np.double_t, ndim=2] X,
         for i in range(n_features):
             q, p = numerator[i,label], denominator[i, label]
             if p == 0:
-               pass
+               #G[i][label] *= 0.001
+                pass
             #if p == 0 and q == 0:
             #   G[i][label] = 0   this block can always make the algorithm converge fast
             #elif q != 0:         which may means the result is not good
-            #   G[i][label] = sqrt(numerator[i, label]/ resizor)
+            #   G[i][label] *= sqrt(numerator[i, label]/ resizor)
             else:
                G[i][label] *= sqrt(numerator[i, label] /
                                 p)
@@ -166,6 +167,6 @@ def _update_cvxnmf_fast(np.ndarray[np.double_t, ndim=2] X,
     denominator_w = np.dot(XtX_n,G) + np.dot(XtX_p,WGtG)
     for label in range(n_components):
         for i in range(n_features):
-            W[i, label] = sqrt(numerator_w[i, label]/ denominator_w[i, label])
+            W[i, label] *= sqrt(numerator_w[i, label]/ denominator_w[i, label])
 
     return W, G
