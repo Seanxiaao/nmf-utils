@@ -64,7 +64,7 @@ def kernel_M(X, initialization, parameter):
             elif initialization == 'poly':
                 result[i, j] = pol_kernel(Xt[i], Xt[j], parameter)
             elif initialization == 'sigmoid':
-                result[i, j] = sig_kernel(x, y, parameter)
+                result[i, j] = sig_kernel(Xt[i], Xt[j], parameter)
     return result
 
 #kernels we needed
@@ -75,12 +75,11 @@ def pol_kernel(x, y, dimension):
     return (1 + np.dot(x.T, y)) ** dimension
 
 def sig_kernel(x, y, alpha):
-    return np.tanh(alpha * np.dot(x.T, y))
+    return np.tanh(alpha * np.dot(x.T, y)+1)
 
 #----quality function ----
 def sparscity(X):
-    n = X.shape[0] * X.shape[1]
-    return (n - (np.linalg.norm(X, ord = 1)/np.linalg.norm(X, ord = 2)) ** 2)/(n - 1)
+    return (np.linalg.norm(X, ord = 1)/np.linalg.norm(X, ord = 2)) ** 2
 
 def accuracy(X):
     pass
@@ -283,6 +282,7 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
                          "positive; got (tol=%r)" % tol)
 
     K, Ir = kernel_M(X, kernel, parameter), np.eye(n_features)
+
     F = np.random.rand(n_features, n_components) # G is sensitive for initial position
     Ht = np.zeros((n_components, n_features))
     E = np.ones((n_components, n_features))
@@ -298,10 +298,11 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
     result = []
     for n_iter in range(max_iter):
         W = Ir - np.dot(F, G)
-        D = np.dot(W.T, np.dot(K, W)) ** (-1/2)
+        D = np.dot(W.T, np.dot(K, W))
         temp_lst = []
         for i in range(len(D)):
-            temp_lst.append(D[i, i])
+            temp = D[i, i] ** (-1/2)
+            temp_lst.append(temp)
         D = np.diag([x for x in temp_lst])
         numerator, denominator =np.array(np.dot(K,np.dot(D, G.T))), \
                                 np.array(np.dot(K,np.dot(F, np.dot(G, np.dot(D,G.T)))))
@@ -309,7 +310,8 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
         for i in range(n_features):
             for j in range(n_components):
                 if denominator[i, j] == 0:
-                    pass
+                    F[i,j] *= 10000
+                    #pass
                 else:
                     F[i, j] *= numerator[i, j]/denominator[i, j]
 
@@ -318,13 +320,16 @@ def kernel_non_negative_factorization(X, F=None, G=None, n_components = None,
         for i in range(n_components):
             for j in range(n_features):
                 if denominator[j, i] == 0:
-                    pass
+                    G[i, j] *= 10000
+                    #pass
                 else:
                     G[i, j] *= numerator[j, i] / denominator[j, i]
+
         if (n_iter % 1) == 0:
-            los = losses(X,np.dot(X,F),G.T)
-            print("It is {} times iteration for kernel-NMF with losses {} and sparseness:".format(n_iter, los))
-            result.append([n_iter,los])
+
+            los = sum([1/x for x in temp_lst])
+            print("It is {} times iteration for kernel-NMF{} with losses {}".format(n_iter,kernel + ',' + str(parameter), los))
+            result.append(los)
 
 
     return F, G, result
