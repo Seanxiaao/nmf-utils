@@ -14,6 +14,7 @@ def main(arg):
     sample = source_data.get_header()
     feature = source_data.get_index()
     X = source_data.get_matrix()
+    print(X)
     print("the frobenis norm of X is {}!".format(np.linalg.norm(X)))
     #clustering
     component = input("please input the number of cluster you want:")
@@ -21,28 +22,30 @@ def main(arg):
     print("current avaiable method for nmf(should input in) is \n"
           "semi-nmf(snmf),semi-nmf with constraint(csnmf),convex-nmf(cvxnmf) and kernel-nmf(knmf)")
     method = input("input the method of nmf you want:")
+    mx = int(input("input the max iteration numbers:"))
     if method not in ["snmf", "csnmf", "cvxnmf", "knmf"]:
         raise ValueError("the method you put in is not available now")
 
     if method == "snmf":
         print("semi-nmf begins")
-        F, G, result1 = util.semi_non_negative_factorization(X, n_components = component,max_iter = 100)
+        F, G, result1 = util.semi_non_negative_factorization(X, n_components = component,max_iter = mx)
 
     if method == "csnmf":
         a = input("please input the alpha:")
         b =  input("please input in beta:")
         a, b = float(a), float(b)
         F, G, result1 = util.semi_non_negative_factorization_with_straint(X, n_components=component,
-                                                                          alpha = a, beta = b, max_iter=100)
+                                                                          alpha = a, beta = b, max_iter=mx)
     if method == "cvxnmf":
         print("convex-nmf begins")
-        F, G, result = util.convex_non_negative_factorization(X, n_components= component, max_iter=100)
+        F, G, result = util.convex_non_negative_factorization(X, n_components= component, max_iter=mx)
     if method == "knmf":
         k = input("the kernel is:")
         p = input("parameter for kernel is:")
         p = float(p)
-        F, G, result = util.kernel_non_negative_factorization(X, n_components = component, max_iter=100, kernel=k, parameter=p)
-    F, G = preprocessing.normalize(F, norm='l2'),np.around(preprocessing.normalize(G, norm='l2'),3)
+        F, G, result = util.kernel_non_negative_factorization(X, n_components = component, max_iter=mx, kernel=k, parameter=p)
+
+    #F, G = preprocessing.normalize(F, norm='l2'),np.around(preprocessing.normalize(G, norm='l2'),3)
     end = time.time()
     G_df = pd.DataFrame(G, index= sample)
     G_df.to_csv('G_{}.csv'.format(method))
