@@ -29,7 +29,7 @@ class TestNMF(unittest.TestCase):
         Gt_expected = np.array([[0.61, 0.89, 0.54, 0.77, 0.14, 0.36, 0.84],
                                 [0.12, 0.53, 0.11, 1.03, 0.60, 0.77, 1.16]])
 
-        F, G = util.semi_non_negative_factorization(X, n_components = 2)
+        F, G = util.semi_non_negative_factorization(X, n_components = 2, initialization='random')
         Gt = G.T
         print("F expected {}, but got {}".format(F_expected, F))
         print("G expected {}, but got {}".format(Gt_expected, Gt))
@@ -119,7 +119,7 @@ def test_result():
     Gcvx_expected = np.array([[0.31, 0.31, 0.29, 0.02, 0, 0,  0.02],
                               [0, 0.06, 0, 0.31, 0.27, 0.30, 0.36]])
 
-    F, G , losses= util.semi_non_negative_factorization(X, n_components = 2)
+    F, G , losses= util.semi_non_negative_factorization(X, n_components = 2,initialization='Kmeans')
     F1, G1, losses= util.convex_non_negative_factorization(X, n_components = 2)
     Gt = G.T
     Gt1 = G1.T
@@ -129,10 +129,10 @@ def test_result():
     F, Gt = preprocessing.normalize(F, norm='l2'),preprocessing.normalize(Gt, norm='l2')
     F1, Gt1 = preprocessing.normalize(np.dot(X,F1), norm='l2'),preprocessing.normalize(Gt1, norm='l2')
     print("Fsemi_expected:\n {} \n Fcvx_expected : \n {}  \n but got \n Fsemi :\n {} \n Fcvnx :\n {}" \
-            .format(F_expected, Fcvx_expected, np.around(F,2), np.around(F1,2)))
+            .format(F_expected, Fcvx_expected, np.round(F,2), np.round(F1,2)))
     print("-------------------" * 5 )
     print("Gsemi_expected: \n {} \n Gcvx_expected : \n {}  \n but got \n Gsemi :\n {} \n Gcvnx : \n{}" \
-            .format(Gt_expected,Gcvx_expected, np.around(Gt,2),np.around(Gt1,2)))
+            .format(Gt_expected,Gcvx_expected, np.round(Gt,2), np.round(Gt1,2)))
 
 def test_kmeans_result():
     X = np.array([[1.3, 1.8, 4.8, 7.1, 5.0, 5.2, 8.0],
@@ -184,11 +184,16 @@ def test_kernel():
     #X = np.array([[1.0 ,0.0], [0.0, 1.0]])
     #estimated = util.semi_non_negative_factorization(X)
     #estimated = util.semi_non_negative_factorization_with_straint(X, max_iter = 10, alpha = 0.5, beta = 0.5)
-    estimated = util.kernel_non_negative_factorization(X, n_components = 2, max_iter = 30, kernel= 'poly', parameter = 2)
+    mx = int(input("test iteration times:"))
+    estimated = util.kernel_non_negative_factorization(X, n_components = 2, max_iter = mx, kernel= 'rbf', parameter = 0.5)
     print("****" * 10)
-    estimated1 = util.kernel_non_negative_factorization(X, n_components = 2,max_iter = 30, kernel= 'poly', parameter = 3)
-    print("kernel result is {}".format(estimated[1]))
-    print("kernel result is {}".format(estimated1[1]))
+    estimated1 = util.kernel_non_negative_factorization(X, n_components = 2,max_iter = mx, kernel= 'poly', parameter = 3)
+    print("****" * 10)
+    estimated2 = util.kernel_non_negative_factorization(X, n_components=2, max_iter= mx, kernel='sigmoid',parameter=-0.5)
+    print("kernel result is {}".format(np.round(estimated[1],2)))
+    print("kernel result is {}".format(np.round(estimated1[1],2)))
+    print("kernel result is {}".format(np.round(estimated2[1],2)))
+
 
 def test_plot(arg):
 

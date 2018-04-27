@@ -12,15 +12,10 @@ from libc.math cimport fabs
 from libc.math cimport sqrt
 
 cdef double get_pos_value(double value):
-     return (fabs(value) + value) / 2
+     return (fabs(value) + value) / 2.0
 
 cdef np.ndarray[np.double_t, ndim=2] M_pos(np.ndarray[np.double_t, ndim=2] a):
-     cdef int row = a.shape[0]
-     cdef int column = a.shape[1]
-     for i in range(row):
-         for j in range(column):
-              a[i, j] = get_pos_value(a[i,j])
-     return a
+     return (np.abs(a) + a)/ 2.0
 
 
 
@@ -52,28 +47,10 @@ def _update_snmf_fast(np.ndarray[np.double_t, ndim=2] X,
     GFtF = np.dot(G, FtF)
     GFtF_p = M_pos(GFtF)
     GFtF_n = GFtF_p - GFtF
-    numerator, denominator = XtF_p + np.dot(G, FtF_n), XtF_n + np.dot(G, FtF_p)
+    numerator, denominator = XtF_p + np.dot(G, FtF_n), XtF_n + np.dot(G, FtF_p) + resizor
     #numerator, denominator = XtF_p + GFtF_n, XtF_n + GFtF_p
-    for label in range(n_components):
-        for i in range(n_features):
-            q, p = numerator[i,label], denominator[i, label]
-            if p == 0:
-               pass
-            #if p == 0 and q == 0:
-            #   G[i][label] = 0   this block can always make the algorithm converge fast
-            #elif q != 0:         which may means the result is not good
-            #   G[i][label] = sqrt(numerator[i, label]/ resizor)
-            else:
-               G[i][label] *= sqrt(numerator[i, label] /
-                                p)
+    G *= np.sqrt(numerator/ denominator)
 
-    """
-    XtF , GFtF = np.dot(X.T, F), np.dot(G,np.dot(F.T,F))
-    for label in range(n_components):
-        for i in range(n_features):
-           G[i][label] = sqrt((max(0, XtF[i,label]) + max(0,GFtF[i, label])) /
-                                (max(0,XtF[i,label]) + max(0, GFtF[i, label])) )
-    """
     #Calculate F
     #F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
 
@@ -105,27 +82,7 @@ def _update_snmf_fast_constraint(np.ndarray[np.double_t, ndim=2] X,
     XtF_p,  FtF_p = M_pos(XtF), M_pos(FtF)
     XtF_n,  FtF_n = XtF_p - XtF, FtF_p - FtF
     numerator, denominator = XtF_p + np.dot(G, FtF_n), XtF_n + np.dot(G, FtF_p)
-    for label in range(n_components):
-        for i in range(n_features):
-            q, p = numerator[i,label], denominator[i, label]
-            if p == 0:
-               #G[i][label] *= 0.001
-                pass
-            #if p == 0 and q == 0:
-            #   G[i][label] = 0   this block can always make the algorithm converge fast
-            #elif q != 0:         which may means the result is not good
-            #   G[i][label] *= sqrt(numerator[i, label]/ resizor)
-            else:
-               G[i][label] *= sqrt(numerator[i, label] /
-                                p)
-
-    """
-    XtF , GFtF = np.dot(X.T, F), np.dot(G,np.dot(F.T,F))
-    for label in range(n_components):
-        for i in range(n_features):
-           G[i][label] = sqrt((max(0, XtF[i,label]) + max(0,GFtF[i, label])) /
-                                (max(0,XtF[i,label]) + max(0, GFtF[i, label])) )
-    """
+    G *= np.sqrt(numerator/ denominator)
     #Calculate F
     #F = np.dot(X , np.dot(G, np.linalg.inv(np.dot(G.T, G))))
 
